@@ -15,13 +15,13 @@ dependencies:
   http: ^1.1.0
   
   # Audio recording and playback
-  record: ^5.0.4
-  audioplayers: ^5.2.1
+  record: ^6.0.0
+  audioplayers: ^6.0.0
   
   # Local storage
-  sqflite: ^2.3.0
+  sqflite: ^2.4.0
   path: ^1.8.3
-  shared_preferences: ^2.2.2
+  shared_preferences: ^2.3.0
   
   # State management
   provider: ^6.1.1
@@ -31,7 +31,7 @@ dependencies:
   google_fonts: ^6.1.0
   
   # Permissions
-  permission_handler: ^11.1.0
+  permission_handler: ^12.0.0
   
   # Environment variables
   flutter_dotenv: ^5.1.0
