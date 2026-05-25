@@ -10,7 +10,7 @@ class HistoryScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('История'),
-        backgroundColor: const Color(0xFF2D5A4A),
+        backgroundColor: Colors.black,
         foregroundColor: Colors.white,
         actions: [
           IconButton(
@@ -53,7 +53,7 @@ class HistoryScreen extends StatelessWidget {
                   subtitle: Text(
                     item['translated'],
                     style: const TextStyle(
-                      color: Color(0xFF2D5A4A),
+                      color: Colors.black87,
                       fontSize: 16,
                     ),
                   ),

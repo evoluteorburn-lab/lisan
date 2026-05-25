@@ -33,7 +33,7 @@ class _TranslateScreenState extends State<TranslateScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Быстрый перевод'),
-        backgroundColor: const Color(0xFF2D5A4A),
+        backgroundColor: Colors.black,
         foregroundColor: Colors.white,
       ),
       body: Padding(
@@ -115,7 +115,7 @@ class _TranslateScreenState extends State<TranslateScreen> {
         lang,
         style: const TextStyle(fontWeight: FontWeight.bold),
       ),
-      backgroundColor: const Color(0xFF2D5A4A).withOpacity(0.1),
+      backgroundColor: Colors.black.withOpacity(0.1),
     );
   }
 
@@ -129,11 +129,11 @@ class _TranslateScreenState extends State<TranslateScreen> {
         width: _isRecording ? 180 : 160,
         height: _isRecording ? 180 : 160,
         decoration: BoxDecoration(
-          color: _isRecording ? Colors.red : const Color(0xFF2D5A4A),
+          color: _isRecording ? Colors.red : Colors.black,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: (_isRecording ? Colors.red : const Color(0xFF2D5A4A))
+              color: (_isRecording ? Colors.red : Colors.black)
                   .withOpacity(0.3),
               blurRadius: 20,
               spreadRadius: 5,
@@ -343,7 +343,7 @@ class _TranslateScreenState extends State<TranslateScreen> {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: isOriginal ? Colors.black87 : const Color(0xFF2D5A4A),
+            color: isOriginal ? Colors.black87 : Colors.black,
           ),
         ),
       ],
@@ -359,7 +359,7 @@ class _TranslateScreenState extends State<TranslateScreen> {
       onTap: onTap,
       child: Column(
         children: [
-          Icon(icon, size: 28, color: const Color(0xFF2D5A4A)),
+          Icon(icon, size: 28, color: Colors.black),
           const SizedBox(height: 4),
           Text(
             label,

@@ -38,7 +38,7 @@ class PhraseSetsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Наборы фраз'),
-        backgroundColor: const Color(0xFF2D5A4A),
+        backgroundColor: Colors.black,
         foregroundColor: Colors.white,
       ),
       body: ListView.builder(
@@ -49,7 +49,7 @@ class PhraseSetsScreen extends StatelessWidget {
           return Card(
             margin: const EdgeInsets.only(bottom: 12),
             child: ExpansionTile(
-              leading: Icon(set['icon'] as IconData, color: const Color(0xFF2D5A4A)),
+              leading: Icon(set['icon'] as IconData, color: Colors.black),
               title: Text(
                 set['title'] as String,
                 style: const TextStyle(fontWeight: FontWeight.bold),
@@ -60,12 +60,12 @@ class PhraseSetsScreen extends StatelessWidget {
                   subtitle: Text(
                     phrase['ar']!,
                     style: const TextStyle(
-                      color: Color(0xFF2D5A4A),
+                      color: Colors.black87,
                       fontSize: 16,
                     ),
                   ),
                   trailing: IconButton(
-                    icon: const Icon(Icons.volume_up, color: Color(0xFF2D5A4A)),
+                    icon: const Icon(Icons.volume_up, color: Colors.black),
                     onPressed: () {
                       // TODO: Play audio
                     },

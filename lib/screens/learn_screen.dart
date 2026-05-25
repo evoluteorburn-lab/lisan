@@ -34,7 +34,7 @@ class _LearnScreenState extends State<LearnScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Режим обучения'),
-        backgroundColor: const Color(0xFF4A7C6F),
+        backgroundColor: Colors.black,
         foregroundColor: Colors.white,
       ),
       body: Padding(
@@ -116,7 +116,7 @@ class _LearnScreenState extends State<LearnScreen> {
         lang,
         style: const TextStyle(fontWeight: FontWeight.bold),
       ),
-      backgroundColor: const Color(0xFF4A7C6F).withOpacity(0.1),
+      backgroundColor: Colors.black.withOpacity(0.1),
     );
   }
 
@@ -130,11 +130,11 @@ class _LearnScreenState extends State<LearnScreen> {
         width: _isRecording ? 180 : 160,
         height: _isRecording ? 180 : 160,
         decoration: BoxDecoration(
-          color: _isRecording ? Colors.red : const Color(0xFF4A7C6F),
+          color: _isRecording ? Colors.red : Colors.black,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: (_isRecording ? Colors.red : const Color(0xFF4A7C6F))
+              color: (_isRecording ? Colors.red : Colors.black)
                   .withOpacity(0.3),
               blurRadius: 20,
               spreadRadius: 5,
@@ -288,7 +288,7 @@ class _LearnScreenState extends State<LearnScreen> {
                       icon: Icon(_showExplanation ? Icons.expand_less : Icons.expand_more),
                       label: Text(_showExplanation ? 'Скрыть объяснение' : 'Показать объяснение'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4A7C6F),
+                        backgroundColor: Colors.black,
                         foregroundColor: Colors.white,
                       ),
                     ),
@@ -308,7 +308,7 @@ class _LearnScreenState extends State<LearnScreen> {
                             'Объяснение от AI:',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF4A7C6F),
+                              color: Colors.black,
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -386,7 +386,7 @@ class _LearnScreenState extends State<LearnScreen> {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: isOriginal ? Colors.black87 : const Color(0xFF4A7C6F),
+            color: isOriginal ? Colors.black87 : Colors.black,
           ),
         ),
       ],
@@ -402,7 +402,7 @@ class _LearnScreenState extends State<LearnScreen> {
       onTap: onTap,
       child: Column(
         children: [
-          Icon(icon, size: 28, color: const Color(0xFF4A7C6F)),
+          Icon(icon, size: 28, color: Colors.black),
           const SizedBox(height: 4),
           Text(
             label,
