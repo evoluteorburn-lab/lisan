@@ -23,11 +23,6 @@ class _TranslateScreenState extends State<TranslateScreen> {
   final AudioService _audioService = AudioService();
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   void dispose() {
     _audioService.dispose();
     super.dispose();
@@ -45,15 +40,10 @@ class _TranslateScreenState extends State<TranslateScreen> {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
-            // Language selector
             _buildLanguageSelector(context),
             const SizedBox(height: 40),
-
-            // Recording button
             _buildRecordingButton(),
             const SizedBox(height: 40),
-
-            // Loading indicator
             if (_isTranslating)
               const Column(
                 children: [
@@ -64,8 +54,6 @@ class _TranslateScreenState extends State<TranslateScreen> {
                   Text('Переводим...'),
                 ],
               ),
-
-            // Error message
             if (_errorMessage != null)
               Container(
                 padding: const EdgeInsets.all(12),
@@ -87,8 +75,6 @@ class _TranslateScreenState extends State<TranslateScreen> {
                   ],
                 ),
               ),
-
-            // Result
             if (_showResult && !_isTranslating) _buildResult(context),
           ],
         ),
@@ -180,7 +166,6 @@ class _TranslateScreenState extends State<TranslateScreen> {
   Future<void> _stopAndTranslate() async {
     if (!_isRecording) return;
 
-    // Stop recording
     final recordResult = await _audioService.stopRecording();
     if (!recordResult['success']) {
       setState(() {
@@ -197,7 +182,6 @@ class _TranslateScreenState extends State<TranslateScreen> {
       _errorMessage = null;
     });
 
-    // Transcribe audio
     final transcribeResult = await _translationService.transcribeAudio(
       audioFilePath: recordResult['path'],
       language: 'ru',
@@ -212,8 +196,6 @@ class _TranslateScreenState extends State<TranslateScreen> {
     }
 
     final text = transcribeResult['text'];
-
-    // Translate
     await _performTranslation(text);
   }
 
@@ -230,7 +212,7 @@ class _TranslateScreenState extends State<TranslateScreen> {
         text: text,
         sourceLang: provider.sourceLanguage,
         targetLang: provider.targetLanguage,
-        withExplanation: false, // Quick mode - no explanation
+        withExplanation: false,
         withVoice: true,
       );
 
@@ -241,7 +223,6 @@ class _TranslateScreenState extends State<TranslateScreen> {
           audioPath: result['audio_path'],
         );
 
-        // Play audio automatically
         if (result['audio_path'] != null) {
           await _audioService.playAudio(result['audio_path']);
         }
@@ -278,7 +259,6 @@ class _TranslateScreenState extends State<TranslateScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Original text
                   _buildTextSection(
                     label: provider.sourceLanguage == 'RU' ? 'Русский' : 'العربية',
                     text: provider.lastOriginalText.isNotEmpty
@@ -287,8 +267,6 @@ class _TranslateScreenState extends State<TranslateScreen> {
                     isOriginal: true,
                   ),
                   const Divider(height: 32),
-
-                  // Translated text
                   _buildTextSection(
                     label: provider.targetLanguage == 'AR' ? 'العربية' : 'Русский',
                     text: provider.lastTranslatedText.isNotEmpty
@@ -297,8 +275,6 @@ class _TranslateScreenState extends State<TranslateScreen> {
                     isOriginal: false,
                   ),
                   const Spacer(),
-
-                  // Action buttons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [

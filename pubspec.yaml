@@ -1,6 +1,5 @@
 name: lisan
 description: Lisan - AI Translator + Learning Mode
-
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -46,5 +45,13 @@ flutter:
   uses-material-design: true
   
   assets:
-    - .env
+    - assets/.env
     - assets/images/
+    - assets/audio/
+  
+  fonts:
+    - family: Cairo
+      fonts:
+        - asset: assets/fonts/Cairo-Regular.ttf
+        - asset: assets/fonts/Cairo-Bold.ttf
+          weight: 700

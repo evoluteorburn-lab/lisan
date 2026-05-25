@@ -9,37 +9,30 @@ class HistoryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Мои фразы'),
-        backgroundColor: const Color(0xFF6B9B8F),
+        title: const Text('История'),
+        backgroundColor: const Color(0xFF2D5A4A),
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () {
+              context.read<AppProvider>().clearHistory();
+            },
+          ),
+        ],
       ),
       body: Consumer<AppProvider>(
         builder: (context, provider, child) {
           if (provider.history.isEmpty) {
-            return Center(
+            return const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.bookmark_border,
-                    size: 64,
-                    color: Colors.grey[400],
-                  ),
-                  const SizedBox(height: 16),
+                  Icon(Icons.history, size: 64, color: Colors.grey),
+                  SizedBox(height: 16),
                   Text(
-                    'Пока нет сохранённых фраз',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Начните переводить — фразы появятся здесь',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[500],
-                    ),
+                    'История пуста',
+                    style: TextStyle(fontSize: 18, color: Colors.grey),
                   ),
                 ],
               ),
@@ -47,59 +40,35 @@ class HistoryScreen extends StatelessWidget {
           }
 
           return ListView.builder(
-            padding: const EdgeInsets.all(16),
             itemCount: provider.history.length,
             itemBuilder: (context, index) {
               final item = provider.history[index];
               return Card(
-                margin: const EdgeInsets.only(bottom: 12),
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: ListTile(
-                  contentPadding: const EdgeInsets.all(16),
                   title: Text(
-                    item['original'] ?? '',
+                    item['original'],
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    item['translated'],
                     style: const TextStyle(
-                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2D5A4A),
                       fontSize: 16,
                     ),
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 8),
-                      Text(
-                        item['translated'] ?? '',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: const Color(0xFF2D5A4A),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      if (item['explanation'] != null && item['explanation'].isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Text(
-                            item['explanation'],
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ),
-                    ],
                   ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      if (item['audioPath'] != null)
+                        IconButton(
+                          icon: const Icon(Icons.play_arrow),
+                          onPressed: () {
+                            // TODO: Play audio
+                          },
+                        ),
                       IconButton(
-                        icon: const Icon(Icons.play_arrow),
-                        onPressed: () {
-                          // TODO: Play audio
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete_outline),
+                        icon: const Icon(Icons.delete, color: Colors.red),
                         onPressed: () {
                           provider.removeFromHistory(index);
                         },

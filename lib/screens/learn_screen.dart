@@ -15,19 +15,13 @@ class LearnScreen extends StatefulWidget {
 
 class _LearnScreenState extends State<LearnScreen> {
   bool _isRecording = false;
-  bool _isLoading = false;
+  bool _isTranslating = false;
   bool _showResult = false;
   bool _showExplanation = false;
   String? _errorMessage;
-  Map<String, dynamic>? _lastResult;
 
   final TranslationService _translationService = TranslationService();
   final AudioService _audioService = AudioService();
-
-  @override
-  void initState() {
-    super.initState();
-  }
 
   @override
   void dispose() {
@@ -47,16 +41,11 @@ class _LearnScreenState extends State<LearnScreen> {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
-            // Language selector
             _buildLanguageSelector(context),
-            const SizedBox(height: 32),
-
-            // Recording button
+            const SizedBox(height: 40),
             _buildRecordingButton(),
-            const SizedBox(height: 32),
-
-            // Loading indicator
-            if (_isLoading)
+            const SizedBox(height: 40),
+            if (_isTranslating)
               const Column(
                 children: [
                   CircularProgressIndicator(
@@ -66,8 +55,6 @@ class _LearnScreenState extends State<LearnScreen> {
                   Text('Переводим и готовим объяснение...'),
                 ],
               ),
-
-            // Error message
             if (_errorMessage != null)
               Container(
                 padding: const EdgeInsets.all(12),
@@ -89,9 +76,7 @@ class _LearnScreenState extends State<LearnScreen> {
                   ],
                 ),
               ),
-
-            // Result with explanation
-            if (_showResult && !_isLoading) _buildResultWithExplanation(context),
+            if (_showResult && !_isTranslating) _buildResult(context),
           ],
         ),
       ),
@@ -142,8 +127,8 @@ class _LearnScreenState extends State<LearnScreen> {
       onTapCancel: () => _cancelRecording(),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        width: _isRecording ? 160 : 140,
-        height: _isRecording ? 160 : 140,
+        width: _isRecording ? 180 : 160,
+        height: _isRecording ? 180 : 160,
         decoration: BoxDecoration(
           color: _isRecording ? Colors.red : const Color(0xFF4A7C6F),
           shape: BoxShape.circle,
@@ -157,8 +142,8 @@ class _LearnScreenState extends State<LearnScreen> {
           ],
         ),
         child: Icon(
-          _isRecording ? Icons.mic : Icons.school,
-          size: 56,
+          _isRecording ? Icons.mic : Icons.mic_none,
+          size: 64,
           color: Colors.white,
         ),
       ),
@@ -182,7 +167,6 @@ class _LearnScreenState extends State<LearnScreen> {
   Future<void> _stopAndTranslate() async {
     if (!_isRecording) return;
 
-    // Stop recording
     final recordResult = await _audioService.stopRecording();
     if (!recordResult['success']) {
       setState(() {
@@ -194,13 +178,12 @@ class _LearnScreenState extends State<LearnScreen> {
 
     setState(() {
       _isRecording = false;
-      _isLoading = true;
+      _isTranslating = true;
       _showResult = false;
       _showExplanation = false;
       _errorMessage = null;
     });
 
-    // Transcribe audio
     final transcribeResult = await _translationService.transcribeAudio(
       audioFilePath: recordResult['path'],
       language: 'ru',
@@ -208,16 +191,14 @@ class _LearnScreenState extends State<LearnScreen> {
 
     if (!transcribeResult['success']) {
       setState(() {
-        _isLoading = false;
+        _isTranslating = false;
         _errorMessage = transcribeResult['error'] ?? 'Transcription failed';
       });
       return;
     }
 
     final text = transcribeResult['text'];
-
-    // Translate with explanation
-    await _performLearningTranslation(text);
+    await _performTranslation(text);
   }
 
   Future<void> _cancelRecording() async {
@@ -225,7 +206,7 @@ class _LearnScreenState extends State<LearnScreen> {
     setState(() => _isRecording = false);
   }
 
-  Future<void> _performLearningTranslation(String text) async {
+  Future<void> _performTranslation(String text) async {
     try {
       final provider = context.read<AppProvider>();
 
@@ -238,7 +219,6 @@ class _LearnScreenState extends State<LearnScreen> {
       );
 
       if (result['success']) {
-        // Save to provider for history
         provider.setLastTranslation(
           original: result['original'],
           translated: result['translated'],
@@ -246,125 +226,142 @@ class _LearnScreenState extends State<LearnScreen> {
           audioPath: result['audio_path'],
         );
 
-        // Play audio automatically
         if (result['audio_path'] != null) {
           await _audioService.playAudio(result['audio_path']);
         }
 
         setState(() {
-          _lastResult = result;
-          _isLoading = false;
+          _isTranslating = false;
           _showResult = true;
         });
       } else {
         setState(() {
-          _isLoading = false;
+          _isTranslating = false;
           _errorMessage = result['error'] ?? 'Translation failed';
         });
       }
     } catch (e) {
       setState(() {
-        _isLoading = false;
+        _isTranslating = false;
         _errorMessage = 'Error: $e';
       });
     }
   }
 
-  Widget _buildResultWithExplanation(BuildContext context) {
-    return Expanded(
-      child: SingleChildScrollView(
-        child: Card(
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Original text
-                _buildTextSection(
-                  label: 'Русский',
-                  text: _lastResult?['original'] ?? 'Как дела?',
-                  isOriginal: true,
-                ),
-                const Divider(height: 24),
-
-                // Translated text
-                _buildTextSection(
-                  label: 'العربية',
-                  text: _lastResult?['translated'] ?? 'كيف تسير الأمور؟',
-                  isOriginal: false,
-                ),
-                const SizedBox(height: 16),
-
-                // Show explanation button
-                if (!_showExplanation)
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      setState(() => _showExplanation = true);
-                    },
-                    icon: const Icon(Icons.lightbulb),
-                    label: const Text('Показать объяснение'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4A7C6F),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
+  Widget _buildResult(BuildContext context) {
+    return Consumer<AppProvider>(
+      builder: (context, provider, child) {
+        return Expanded(
+          child: Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildTextSection(
+                    label: provider.sourceLanguage == 'RU' ? 'Русский' : 'العربية',
+                    text: provider.lastOriginalText.isNotEmpty
+                        ? provider.lastOriginalText
+                        : 'Привет',
+                    isOriginal: true,
                   ),
-
-                // Explanation
-                if (_showExplanation) _buildExplanation(),
-
-                const SizedBox(height: 16),
-
-                // Action buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildActionButton(
-                      icon: Icons.play_arrow,
-                      label: 'Слушать',
-                      onTap: () {
-                        if (_lastResult?['audio_path'] != null) {
-                          _audioService.playAudio(_lastResult!['audio_path']);
-                        }
+                  const Divider(height: 32),
+                  _buildTextSection(
+                    label: provider.targetLanguage == 'AR' ? 'العربية' : 'Русский',
+                    text: provider.lastTranslatedText.isNotEmpty
+                        ? provider.lastTranslatedText
+                        : 'مرحباً',
+                    isOriginal: false,
+                  ),
+                  const SizedBox(height: 16),
+                  if (provider.lastExplanation.isNotEmpty)
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _showExplanation = !_showExplanation;
+                        });
                       },
+                      icon: Icon(_showExplanation ? Icons.expand_less : Icons.expand_more),
+                      label: Text(_showExplanation ? 'Скрыть объяснение' : 'Показать объяснение'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4A7C6F),
+                        foregroundColor: Colors.white,
+                      ),
                     ),
-                    _buildActionButton(
-                      icon: Icons.save,
-                      label: 'Сохранить',
-                      onTap: () {
-                        final provider = context.read<AppProvider>();
-                        provider.addToHistory(
-                          original: _lastResult?['original'] ?? '',
-                          translated: _lastResult?['translated'] ?? '',
-                          explanation: _lastResult?['explanation'] ?? '',
-                          audioPath: _lastResult?['audio_path'],
-                        );
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Сохранено в историю'),
-                            duration: Duration(seconds: 1),
+                  if (_showExplanation && provider.lastExplanation.isNotEmpty)
+                    Container(
+                      margin: const EdgeInsets.only(top: 12),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey[200]!),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Объяснение от AI:',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF4A7C6F),
+                            ),
                           ),
-                        );
-                      },
+                          const SizedBox(height: 8),
+                          Text(provider.lastExplanation),
+                        ],
+                      ),
                     ),
-                    _buildActionButton(
-                      icon: Icons.favorite,
-                      label: 'Избранное',
-                      onTap: () {
-                        // TODO: Add to favorites
-                      },
-                    ),
-                  ],
-                ),
-              ],
+                  const Spacer(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildActionButton(
+                        icon: Icons.play_arrow,
+                        label: 'Слушать',
+                        onTap: () {
+                          if (provider.lastAudioPath != null) {
+                            _audioService.playAudio(provider.lastAudioPath!);
+                          }
+                        },
+                      ),
+                      _buildActionButton(
+                        icon: Icons.save,
+                        label: 'Сохранить',
+                        onTap: () {
+                          provider.addToHistory(
+                            original: provider.lastOriginalText,
+                            translated: provider.lastTranslatedText,
+                            explanation: provider.lastExplanation,
+                            audioPath: provider.lastAudioPath,
+                          );
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Сохранено в историю'),
+                              duration: Duration(seconds: 1),
+                            ),
+                          );
+                        },
+                      ),
+                      _buildActionButton(
+                        icon: Icons.favorite,
+                        label: 'В избранное',
+                        onTap: () {
+                          // TODO: Add to favorites
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -393,63 +390,6 @@ class _LearnScreenState extends State<LearnScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildExplanation() {
-    final explanation = _lastResult?['explanation'] ?? '';
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF4A7C6F).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFF4A7C6F).withOpacity(0.3),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.lightbulb,
-                color: const Color(0xFF4A7C6F),
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Объяснение',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF4A7C6F),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          if (explanation.isNotEmpty)
-            Text(
-              explanation,
-              style: const TextStyle(
-                fontSize: 14,
-                height: 1.5,
-              ),
-            )
-          else
-            const Text(
-              'Объяснение загружается...',
-              style: TextStyle(
-                fontSize: 14,
-                fontStyle: FontStyle.italic,
-                color: Colors.grey,
-              ),
-            ),
-        ],
-      ),
     );
   }
 

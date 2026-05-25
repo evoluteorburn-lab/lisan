@@ -14,21 +14,62 @@ class TranslationService {
   String get _elevenLabsKey => dotenv.env['ELEVENLABS_API_KEY'] ?? '';
   String get _openAIKey => dotenv.env['OPENAI_API_KEY'] ?? '';
 
-  // API URLs
-  static const String _deepLUrl = 'https://api-free.deepl.com/v2/translate';
-  static const String _deepSeekUrl = 'https://api.deepseek.com/chat/completions';
-  static const String _elevenLabsBaseUrl = 'https://api.elevenlabs.io/v1';
-  static const String _whisperUrl = 'https://api.openai.com/v1/audio/transcriptions';
+  // Base URLs
+  static const String _deepLBase = 'https://api-free.deepl.com/v2';
+  static const String _deepSeekBase = 'https://api.deepseek.com';
+  static const String _elevenLabsBase = 'https://api.elevenlabs.io/v1';
+  static const String _openAIBase = 'https://api.openai.com/v1';
 
-  /// Translate text using DeepL
-  Future<Map<String, dynamic>> translate({
+  // Voice IDs
+  static const String _arabicVoiceId = 'XB0fDUnXU5powFXDhCwa';
+  static const String _russianVoiceId = 'N2lVS1wKimET73z01v';
+
+  /// Full pipeline: transcribe → translate → explain (optional) → voice
+  Future<Map<String, dynamic>> fullPipeline({
     required String text,
     required String sourceLang,
     required String targetLang,
+    bool withExplanation = false,
+    bool withVoice = true,
   }) async {
     try {
+      // Step 1: Translate
+      final translation = await translate(text, sourceLang, targetLang);
+      if (!translation['success']) return translation;
+
+      final translatedText = translation['translated'];
+
+      // Step 2: Get explanation (if learn mode)
+      String? explanation;
+      if (withExplanation) {
+        final explResult = await getExplanation(text, translatedText, sourceLang, targetLang);
+        explanation = explResult['success'] ? explResult['explanation'] : null;
+      }
+
+      // Step 3: Generate voice (if needed)
+      String? audioPath;
+      if (withVoice) {
+        final voiceResult = await textToSpeech(translatedText, targetLang);
+        audioPath = voiceResult['success'] ? voiceResult['audio_path'] : null;
+      }
+
+      return {
+        'success': true,
+        'original': text,
+        'translated': translatedText,
+        'explanation': explanation,
+        'audio_path': audioPath,
+      };
+    } catch (e) {
+      return {'success': false, 'error': 'Pipeline error: $e'};
+    }
+  }
+
+  /// Translate text using DeepL
+  Future<Map<String, dynamic>> translate(String text, String sourceLang, String targetLang) async {
+    try {
       final response = await http.post(
-        Uri.parse(_deepLUrl),
+        Uri.parse('$_deepLBase/translate'),
         headers: {
           'Authorization': 'DeepL-Auth-Key $_deepLKey',
           'Content-Type': 'application/json',
@@ -44,45 +85,36 @@ class TranslationService {
         final data = jsonDecode(response.body);
         return {
           'success': true,
-          'translated_text': data['translations'][0]['text'],
-          'detected_source': data['translations'][0]['detected_source_language'],
+          'translated': data['translations'][0]['text'],
         };
       } else {
-        return {
-          'success': false,
-          'error': 'DeepL API error: ${response.statusCode}',
-        };
+        return {'success': false, 'error': 'DeepL error: ${response.statusCode}'};
       }
     } catch (e) {
-      return {
-        'success': false,
-        'error': 'Translation failed: $e',
-      };
+      return {'success': false, 'error': 'Translation error: $e'};
     }
   }
 
   /// Get explanation from DeepSeek
-  Future<Map<String, dynamic>> getExplanation({
-    required String originalText,
-    required String translatedText,
-    required String targetLang,
-  }) async {
+  Future<Map<String, dynamic>> getExplanation(
+    String original,
+    String translated,
+    String sourceLang,
+    String targetLang,
+  ) async {
     try {
-      final prompt = '''You are a language learning assistant. Explain the translation from Russian to $targetLang.
-
-Original (Russian): $originalText
-Translation ($targetLang): $translatedText
+      final prompt = '''Explain the translation from $sourceLang to $targetLang:
+Original: $original
+Translated: $translated
 
 Provide:
-1. Literal translation (word-by-word meaning)
-2. Context and usage (when to use this phrase)
-3. Alternative expressions (1-2 variations with dialect notes if applicable)
-4. Cultural notes (if relevant)
-
-Keep it concise but informative. Use Arabic script for Arabic examples.''';
+1. Word-by-word breakdown
+2. Grammar notes
+3. Usage context
+4. Pronunciation tips (transliteration)''';  
 
       final response = await http.post(
-        Uri.parse(_deepSeekUrl),
+        Uri.parse('$_deepSeekBase/chat/completions'),
         headers: {
           'Authorization': 'Bearer $_deepSeekKey',
           'Content-Type': 'application/json',
@@ -90,7 +122,7 @@ Keep it concise but informative. Use Arabic script for Arabic examples.''';
         body: jsonEncode({
           'model': 'deepseek-chat',
           'messages': [
-            {'role': 'system', 'content': 'You are a helpful language tutor specializing in Arabic and Russian.'},
+            {'role': 'system', 'content': 'You are an Arabic language teacher. Explain translations clearly.'},
             {'role': 'user', 'content': prompt},
           ],
           'max_tokens': 300,
@@ -105,35 +137,20 @@ Keep it concise but informative. Use Arabic script for Arabic examples.''';
           'explanation': data['choices'][0]['message']['content'],
         };
       } else {
-        return {
-          'success': false,
-          'error': 'DeepSeek API error: ${response.statusCode}',
-        };
+        return {'success': false, 'error': 'DeepSeek error: ${response.statusCode}'};
       }
     } catch (e) {
-      return {
-        'success': false,
-        'error': 'Explanation failed: $e',
-      };
+      return {'success': false, 'error': 'Explanation error: $e'};
     }
   }
 
-  /// Convert text to speech using ElevenLabs
-  Future<Map<String, dynamic>> textToSpeech({
-    required String text,
-    required String language,
-  }) async {
+  /// Text to speech using ElevenLabs
+  Future<Map<String, dynamic>> textToSpeech(String text, String lang) async {
     try {
-      final voiceMap = {
-        'AR': 'JBFqnCBsd6RMkjVDRZzb',
-        'RU': 'N2lVS1wKimET73z01v',
-        'EN': 'XB0fDUnXU5powFXDhCwa',
-      };
-
-      final voiceId = voiceMap[language] ?? voiceMap['AR']!;
+      final voiceId = lang == 'AR' ? _arabicVoiceId : _russianVoiceId;
 
       final response = await http.post(
-        Uri.parse('$_elevenLabsBaseUrl/text-to-speech/$voiceId'),
+        Uri.parse('$_elevenLabsBase/text-to-speech/$voiceId'),
         headers: {
           'xi-api-key': _elevenLabsKey,
           'Content-Type': 'application/json',
@@ -151,29 +168,22 @@ Keep it concise but informative. Use Arabic script for Arabic examples.''';
       if (response.statusCode == 200) {
         // Save audio to temp file
         final tempDir = Directory.systemTemp;
-        final audioFile = File('${tempDir.path}/lisan_tts_${language}_${DateTime.now().millisecondsSinceEpoch}.mp3');
+        final audioFile = File('${tempDir.path}/lisan_tts_${DateTime.now().millisecondsSinceEpoch}.mp3');
         await audioFile.writeAsBytes(response.bodyBytes);
 
         return {
           'success': true,
           'audio_path': audioFile.path,
-          'audio_bytes': response.bodyBytes,
         };
       } else {
-        return {
-          'success': false,
-          'error': 'ElevenLabs API error: ${response.statusCode}',
-        };
+        return {'success': false, 'error': 'ElevenLabs error: ${response.statusCode}'};
       }
     } catch (e) {
-      return {
-        'success': false,
-        'error': 'TTS failed: $e',
-      };
+      return {'success': false, 'error': 'TTS error: $e'};
     }
   }
 
-  /// Transcribe audio using Whisper (OpenAI)
+  /// Transcribe audio using OpenAI Whisper
   Future<Map<String, dynamic>> transcribeAudio({
     required String audioFilePath,
     String language = 'ru',
@@ -181,18 +191,18 @@ Keep it concise but informative. Use Arabic script for Arabic examples.''';
     try {
       final file = File(audioFilePath);
       if (!file.existsSync()) {
-        return {
-          'success': false,
-          'error': 'Audio file not found',
-        };
+        return {'success': false, 'error': 'Audio file not found'};
       }
 
-      final request = http.MultipartRequest('POST', Uri.parse(_whisperUrl));
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$_openAIBase/audio/transcriptions'),
+      );
+
       request.headers['Authorization'] = 'Bearer $_openAIKey';
+      request.files.add(await http.MultipartFile.fromPath('file', audioFilePath));
       request.fields['model'] = 'whisper-1';
       request.fields['language'] = language;
-      request.fields['response_format'] = 'json';
-      request.files.add(await http.MultipartFile.fromPath('file', audioFilePath));
 
       final response = await request.send();
       final responseData = await response.stream.bytesToString();
@@ -202,74 +212,12 @@ Keep it concise but informative. Use Arabic script for Arabic examples.''';
         return {
           'success': true,
           'text': data['text'],
-          'language': data['language'] ?? language,
         };
       } else {
-        return {
-          'success': false,
-          'error': 'Whisper API error: ${response.statusCode}',
-        };
+        return {'success': false, 'error': 'Whisper error: ${response.statusCode} - $responseData'};
       }
     } catch (e) {
-      return {
-        'success': false,
-        'error': 'Transcription failed: $e',
-      };
+      return {'success': false, 'error': 'Transcription error: $e'};
     }
-  }
-
-  /// Full pipeline: translate + explain + TTS
-  Future<Map<String, dynamic>> fullPipeline({
-    required String text,
-    String sourceLang = 'RU',
-    String targetLang = 'AR',
-    bool withExplanation = true,
-    bool withVoice = true,
-  }) async {
-    // Step 1: Translate
-    final translation = await translate(
-      text: text,
-      sourceLang: sourceLang,
-      targetLang: targetLang,
-    );
-
-    if (!translation['success']) {
-      return translation;
-    }
-
-    final translated = translation['translated_text'];
-    final result = {
-      'success': true,
-      'original': text,
-      'translated': translated,
-    };
-
-    // Step 2: Explain
-    if (withExplanation) {
-      final explanation = await getExplanation(
-        originalText: text,
-        translatedText: translated,
-        targetLang: targetLang,
-      );
-
-      if (explanation['success']) {
-        result['explanation'] = explanation['explanation'];
-      }
-    }
-
-    // Step 3: Voice
-    if (withVoice) {
-      final tts = await textToSpeech(
-        text: translated,
-        language: targetLang,
-      );
-
-      if (tts['success']) {
-        result['audio_path'] = tts['audio_path'];
-        result['audio_bytes'] = tts['audio_bytes'];
-      }
-    }
-
-    return result;
   }
 }
