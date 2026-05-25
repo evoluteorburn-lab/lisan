@@ -10,16 +10,26 @@ class AudioService {
   factory AudioService() => _instance;
   AudioService._internal();
 
-  final AudioRecorder _recorder = AudioRecorder();
+  AudioRecorder? _recorder;
   final AudioPlayer _player = AudioPlayer();
   bool _isRecording = false;
   String? _lastRecordingPath;
 
+  /// Initialize recorder
+  Future<void> _initRecorder() async {
+    if (_recorder == null) {
+      _recorder = AudioRecorder();
+    }
+  }
+
   /// Start recording audio
   Future<Map<String, dynamic>> startRecording() async {
     try {
+      // Initialize recorder first
+      await _initRecorder();
+
       // Check permissions
-      final hasPermission = await _recorder.hasPermission();
+      final hasPermission = await _recorder!.hasPermission();
       if (!hasPermission) {
         return {
           'success': false,
@@ -33,7 +43,7 @@ class AudioService {
       final path = '${tempDir.path}/lisan_recording_$timestamp.m4a';
 
       // Start recording
-      await _recorder.start(
+      await _recorder!.start(
         const RecordConfig(encoder: AudioEncoder.aacHe),
         path: path,
       );
@@ -56,14 +66,14 @@ class AudioService {
   /// Stop recording and return file path
   Future<Map<String, dynamic>> stopRecording() async {
     try {
-      if (!_isRecording) {
+      if (!_isRecording || _recorder == null) {
         return {
           'success': false,
           'error': 'Not recording',
         };
       }
 
-      final path = await _recorder.stop();
+      final path = await _recorder!.stop();
       _isRecording = false;
 
       if (path == null) {
@@ -87,8 +97,12 @@ class AudioService {
 
   /// Cancel recording
   Future<void> cancelRecording() async {
-    if (_isRecording) {
-      await _recorder.stop();
+    if (_isRecording && _recorder != null) {
+      try {
+        await _recorder!.stop();
+      } catch (e) {
+        // Ignore errors on cancel
+      }
       _isRecording = false;
     }
   }
@@ -125,7 +139,12 @@ class AudioService {
 
   /// Dispose resources
   void dispose() {
-    _recorder.dispose();
+    try {
+      _recorder?.dispose();
+      _recorder = null;
+    } catch (e) {
+      // Ignore dispose errors
+    }
     _player.dispose();
   }
 }
