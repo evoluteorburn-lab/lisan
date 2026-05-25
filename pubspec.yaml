@@ -1,0 +1,50 @@
+name: lisan
+description: Lisan - AI Translator + Learning Mode
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # HTTP requests
+  http: ^1.1.0
+  
+  # Audio recording and playback
+  record: ^5.0.4
+  audioplayers: ^5.2.1
+  
+  # Local storage
+  sqflite: ^2.3.0
+  path: ^1.8.3
+  shared_preferences: ^2.2.2
+  
+  # State management
+  provider: ^6.1.1
+  
+  # UI
+  flutter_svg: ^2.0.9
+  google_fonts: ^6.1.0
+  
+  # Permissions
+  permission_handler: ^11.1.0
+  
+  # Environment variables
+  flutter_dotenv: ^5.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - .env
+    - assets/images/

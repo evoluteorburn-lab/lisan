@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  lisan-builder:
+    build: .
+    container_name: lisan-apk-builder
+    volumes:
+      - ./build_output:/output
+    command: bash -c "cp /app/build/app/outputs/flutter-apk/app-release.apk /output/"
