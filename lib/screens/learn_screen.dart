@@ -49,7 +49,7 @@ class _LearnScreenState extends State<LearnScreen> {
               const Column(
                 children: [
                   CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4A7C6F)),
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2D5A4A)),
                   ),
                   SizedBox(height: 16),
                   Text('Переводим и готовим объяснение...'),
@@ -98,7 +98,7 @@ class _LearnScreenState extends State<LearnScreen> {
               _buildLanguageChip(provider.sourceLanguage),
               const SizedBox(width: 12),
               IconButton(
-                icon: const Icon(Icons.swap_horiz),
+                icon: const Icon(Icons.swap_horiz, size: 32),
                 onPressed: provider.swapLanguages,
               ),
               const SizedBox(width: 12),
@@ -114,9 +114,12 @@ class _LearnScreenState extends State<LearnScreen> {
     return Chip(
       label: Text(
         lang,
-        style: const TextStyle(fontWeight: FontWeight.bold),
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 18,
+        ),
       ),
-      backgroundColor: Colors.black.withOpacity(0.1),
+      backgroundColor: const Color(0xFF2D5A4A).withOpacity(0.1),
     );
   }
 
@@ -130,11 +133,11 @@ class _LearnScreenState extends State<LearnScreen> {
         width: _isRecording ? 180 : 160,
         height: _isRecording ? 180 : 160,
         decoration: BoxDecoration(
-          color: _isRecording ? Colors.red : Colors.black,
+          color: _isRecording ? Colors.red : const Color(0xFF2D5A4A),
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: (_isRecording ? Colors.red : Colors.black)
+              color: (_isRecording ? Colors.red : const Color(0xFF2D5A4A))
                   .withOpacity(0.3),
               blurRadius: 20,
               spreadRadius: 5,
@@ -288,7 +291,7 @@ class _LearnScreenState extends State<LearnScreen> {
                       icon: Icon(_showExplanation ? Icons.expand_less : Icons.expand_more),
                       label: Text(_showExplanation ? 'Скрыть объяснение' : 'Показать объяснение'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
+                        backgroundColor: const Color(0xFF2D5A4A),
                         foregroundColor: Colors.white,
                       ),
                     ),
@@ -308,7 +311,7 @@ class _LearnScreenState extends State<LearnScreen> {
                             'Объяснение от AI:',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: Colors.black,
+                              color: Color(0xFF2D5A4A),
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -386,7 +389,7 @@ class _LearnScreenState extends State<LearnScreen> {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: isOriginal ? Colors.black87 : Colors.black,
+            color: isOriginal ? Colors.black87 : const Color(0xFF2D5A4A),
           ),
         ),
       ],
@@ -402,7 +405,7 @@ class _LearnScreenState extends State<LearnScreen> {
       onTap: onTap,
       child: Column(
         children: [
-          Icon(icon, size: 28, color: Colors.black),
+          Icon(icon, size: 28, color: const Color(0xFF2D5A4A)),
           const SizedBox(height: 4),
           Text(
             label,

@@ -25,7 +25,8 @@ class LisanApp extends StatelessWidget {
         title: 'Lisan',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF000000)),
+          colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2D5A4A)),
+          primaryColor: const Color(0xFF2D5A4A),
           useMaterial3: true,
         ),
         initialRoute: '/',
