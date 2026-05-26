@@ -5,6 +5,12 @@ import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../services/translation_service.dart';
 import '../services/audio_service.dart';
+import '../theme/ramadan_theme.dart';
+import '../widgets/night_sky_background.dart';
+import '../widgets/gold_buttons.dart';
+import '../widgets/lamp_button.dart';
+import '../l10n/app_localizations.dart';
+import '../main.dart';
 
 class TranslateScreen extends StatefulWidget {
   const TranslateScreen({super.key});
@@ -22,6 +28,19 @@ class _TranslateScreenState extends State<TranslateScreen> {
   final TranslationService _translationService = TranslationService();
   final AudioService _audioService = AudioService();
 
+  // Language display
+  final Map<String, String> languageFlags = {
+    'RU': '🇷🇺',
+    'EN': '🇬🇧',
+    'AR': '🇸🇦',
+  };
+
+  final Map<String, String> languageNames = {
+    'RU': 'Русский',
+    'EN': 'English',
+    'AR': 'العربية',
+  };
+
   @override
   void dispose() {
     _audioService.dispose();
@@ -30,125 +49,176 @@ class _TranslateScreenState extends State<TranslateScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Быстрый перевод'),
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          children: [
-            _buildLanguageSelector(context),
-            const SizedBox(height: 40),
-            _buildRecordingButton(),
-            const SizedBox(height: 40),
-            if (_isTranslating)
-              const Column(
-                children: [
-                  CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2D5A4A)),
-                  ),
-                  SizedBox(height: 16),
-                  Text('Переводим...'),
-                ],
-              ),
-            if (_errorMessage != null)
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.red[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.red[200]!),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.error, color: Colors.red[600]),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _errorMessage!,
-                        style: TextStyle(color: Colors.red[700]),
+      body: NightSkyBackground(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              children: [
+                const SizedBox(height: 20),
+
+                // Title
+                Text(
+                  l10n.appName,
+                  style: RamadanTheme.headingStyle.copyWith(
+                    fontSize: 32,
+                    shadows: [
+                      Shadow(
+                        color: RamadanTheme.goldMatte.withOpacity(0.5),
+                        blurRadius: 10,
                       ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                Text(
+                  l10n.appSubtitle,
+                  style: RamadanTheme.subheadingStyle,
+                ),
+
+                const SizedBox(height: 40),
+
+                // Language selector
+                _buildLanguageSelector(context, l10n),
+
+                const SizedBox(height: 60),
+
+                // Lamp recording button
+                LampButton(
+                  isRecording: _isRecording,
+                  size: 160,
+                  onTap: _isRecording ? _stopAndTranslate : _startRecording,
+                ),
+
+                const SizedBox(height: 24),
+
+                // Recording hint
+                Text(
+                  _isRecording ? l10n.recording : l10n.tapToSpeak,
+                  style: RamadanTheme.labelStyle.copyWith(
+                    color: _isRecording
+                        ? Colors.red.withOpacity(0.8)
+                        : RamadanTheme.textSecondary,
+                  ),
+                ),
+
+                const SizedBox(height: 40),
+
+                // Translation progress / result
+                if (_isTranslating)
+                  const Column(
+                    children: [
+                      CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(RamadanTheme.goldMatte),
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        'Переводим...',
+                        style: TextStyle(color: RamadanTheme.textSecondary),
+                      ),
+                    ],
+                  ),
+
+                if (_errorMessage != null)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.red.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error, color: Colors.red),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _errorMessage!,
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                if (_showResult && !_isTranslating)
+                  Expanded(child: _buildResult(context, l10n)),
+
+                const Spacer(),
+
+                // Bottom buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    GoldButton(
+                      text: l10n.history,
+                      icon: Icons.history,
+                      onTap: () => Navigator.pushNamed(context, '/history'),
+                    ),
+                    GoldButton(
+                      text: l10n.learning,
+                      icon: Icons.school,
+                      onTap: () => Navigator.pushNamed(context, '/learn'),
+                    ),
+                    GoldButton(
+                      text: l10n.settings,
+                      icon: Icons.settings,
+                      onTap: () => _showSettings(l10n),
                     ),
                   ],
                 ),
-              ),
-            if (_showResult && !_isTranslating) _buildResult(context),
-          ],
+
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildLanguageSelector(BuildContext context) {
+  Widget _buildLanguageSelector(BuildContext context, AppLocalizations l10n) {
     return Consumer<AppProvider>(
       builder: (context, provider, child) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          decoration: BoxDecoration(
-            color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildLanguageChip(provider.sourceLanguage),
-              const SizedBox(width: 12),
-              IconButton(
-                icon: const Icon(Icons.swap_horiz, size: 32),
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            LanguageButton(
+              language: languageNames[provider.sourceLanguage]!,
+              flag: languageFlags[provider.sourceLanguage]!,
+              isSelected: true,
+              onTap: () => _showLanguagePicker(context, true),
+            ),
+            const SizedBox(width: 16),
+            Container(
+              decoration: BoxDecoration(
+                color: RamadanTheme.goldMatte.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                icon: const Icon(
+                  Icons.swap_horiz,
+                  color: RamadanTheme.goldLight,
+                  size: 28,
+                ),
                 onPressed: provider.swapLanguages,
               ),
-              const SizedBox(width: 12),
-              _buildLanguageChip(provider.targetLanguage),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildLanguageChip(String lang) {
-    return Chip(
-      label: Text(
-        lang,
-        style: const TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 18,
-        ),
-      ),
-      backgroundColor: const Color(0xFF2D5A4A).withOpacity(0.1),
-    );
-  }
-
-  Widget _buildRecordingButton() {
-    return GestureDetector(
-      onTapDown: (_) => _startRecording(),
-      onTapUp: (_) => _stopAndTranslate(),
-      onTapCancel: () => _cancelRecording(),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: _isRecording ? 180 : 160,
-        height: _isRecording ? 180 : 160,
-        decoration: BoxDecoration(
-          color: _isRecording ? Colors.red : const Color(0xFF2D5A4A),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: (_isRecording ? Colors.red : const Color(0xFF2D5A4A))
-                  .withOpacity(0.3),
-              blurRadius: 20,
-              spreadRadius: 5,
+            ),
+            const SizedBox(width: 16),
+            LanguageButton(
+              language: languageNames[provider.targetLanguage]!,
+              flag: languageFlags[provider.targetLanguage]!,
+              isSelected: false,
+              onTap: () => _showLanguagePicker(context, false),
             ),
           ],
-        ),
-        child: Icon(
-          _isRecording ? Icons.mic : Icons.mic_none,
-          size: 64,
-          color: Colors.white,
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -202,11 +272,6 @@ class _TranslateScreenState extends State<TranslateScreen> {
     await _performTranslation(text);
   }
 
-  Future<void> _cancelRecording() async {
-    await _audioService.cancelRecording();
-    setState(() => _isRecording = false);
-  }
-
   Future<void> _performTranslation(String text) async {
     try {
       final provider = context.read<AppProvider>();
@@ -248,77 +313,79 @@ class _TranslateScreenState extends State<TranslateScreen> {
     }
   }
 
-  Widget _buildResult(BuildContext context) {
+  Widget _buildResult(BuildContext context, AppLocalizations l10n) {
     return Consumer<AppProvider>(
       builder: (context, provider, child) {
-        return Expanded(
-          child: Card(
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: RamadanTheme.backgroundPrimary.withOpacity(0.8),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: RamadanTheme.goldMatte.withOpacity(0.3),
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildTextSection(
+                label: provider.sourceLanguage == 'RU' ? 'Русский' : 'العربية',
+                text: provider.lastOriginalText.isNotEmpty
+                    ? provider.lastOriginalText
+                    : 'Привет',
+                isOriginal: true,
+              ),
+              const Divider(
+                height: 32,
+                color: RamadanTheme.goldMatte,
+              ),
+              _buildTextSection(
+                label: provider.targetLanguage == 'AR' ? 'العربية' : 'Русский',
+                text: provider.lastTranslatedText.isNotEmpty
+                    ? provider.lastTranslatedText
+                    : 'مرحباً',
+                isOriginal: false,
+              ),
+              const Spacer(),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildTextSection(
-                    label: provider.sourceLanguage == 'RU' ? 'Русский' : 'العربية',
-                    text: provider.lastOriginalText.isNotEmpty
-                        ? provider.lastOriginalText
-                        : 'Привет',
-                    isOriginal: true,
+                  _buildActionButton(
+                    icon: Icons.play_arrow,
+                    label: l10n.playAudio,
+                    onTap: () {
+                      if (provider.lastAudioPath != null) {
+                        _audioService.playAudio(provider.lastAudioPath!);
+                      }
+                    },
                   ),
-                  const Divider(height: 32),
-                  _buildTextSection(
-                    label: provider.targetLanguage == 'AR' ? 'العربية' : 'Русский',
-                    text: provider.lastTranslatedText.isNotEmpty
-                        ? provider.lastTranslatedText
-                        : 'مرحباً',
-                    isOriginal: false,
+                  _buildActionButton(
+                    icon: Icons.save,
+                    label: l10n.saveToChat,
+                    onTap: () {
+                      provider.addToHistory(
+                        original: provider.lastOriginalText,
+                        translated: provider.lastTranslatedText,
+                        audioPath: provider.lastAudioPath,
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(l10n.saveToChat),
+                          duration: const Duration(seconds: 1),
+                        ),
+                      );
+                    },
                   ),
-                  const Spacer(),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildActionButton(
-                        icon: Icons.play_arrow,
-                        label: 'Слушать',
-                        onTap: () {
-                          if (provider.lastAudioPath != null) {
-                            _audioService.playAudio(provider.lastAudioPath!);
-                          }
-                        },
-                      ),
-                      _buildActionButton(
-                        icon: Icons.save,
-                        label: 'Сохранить',
-                        onTap: () {
-                          provider.addToHistory(
-                            original: provider.lastOriginalText,
-                            translated: provider.lastTranslatedText,
-                            audioPath: provider.lastAudioPath,
-                          );
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Сохранено в историю'),
-                              duration: Duration(seconds: 1),
-                            ),
-                          );
-                        },
-                      ),
-                      _buildActionButton(
-                        icon: Icons.share,
-                        label: 'Поделиться',
-                        onTap: () {
-                          // TODO: Share
-                        },
-                      ),
-                    ],
+                  _buildActionButton(
+                    icon: Icons.help_outline,
+                    label: l10n.explain,
+                    onTap: () {
+                      Navigator.pushNamed(context, '/learn');
+                    },
                   ),
                 ],
               ),
-            ),
+            ],
           ),
         );
       },
@@ -335,10 +402,7 @@ class _TranslateScreenState extends State<TranslateScreen> {
       children: [
         Text(
           label,
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey[600],
-          ),
+          style: RamadanTheme.labelStyle,
         ),
         const SizedBox(height: 8),
         Text(
@@ -346,7 +410,9 @@ class _TranslateScreenState extends State<TranslateScreen> {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: isOriginal ? Colors.black87 : const Color(0xFF2D5A4A),
+            color: isOriginal
+                ? RamadanTheme.textPrimary
+                : RamadanTheme.goldLight,
           ),
         ),
       ],
@@ -362,17 +428,161 @@ class _TranslateScreenState extends State<TranslateScreen> {
       onTap: onTap,
       child: Column(
         children: [
-          Icon(icon, size: 28, color: const Color(0xFF2D5A4A)),
+          Icon(icon, size: 28, color: RamadanTheme.goldMatte),
           const SizedBox(height: 4),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-            ),
+            style: RamadanTheme.labelStyle,
           ),
         ],
       ),
     );
+  }
+
+  void _showLanguagePicker(BuildContext context, bool isSource) {
+    final l10n = AppLocalizations.of(context)!;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: RamadanTheme.backgroundPrimary,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                l10n.selectLanguage,
+                style: RamadanTheme.headingStyle.copyWith(fontSize: 20),
+              ),
+              const SizedBox(height: 16),
+              _buildLangTile('RU', isSource),
+              _buildLangTile('AR', isSource),
+              _buildLangTile('EN', isSource),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLangTile(String langCode, bool isSource) {
+    final l10n = AppLocalizations.of(context)!;
+    String label;
+    switch (langCode) {
+      case 'RU':
+        label = l10n.russian;
+        break;
+      case 'EN':
+        label = l10n.english;
+        break;
+      case 'AR':
+        label = l10n.arabic;
+        break;
+      default:
+        label = languageNames[langCode]!;
+    }
+
+    return ListTile(
+      leading: Text(languageFlags[langCode]!, style: const TextStyle(fontSize: 24)),
+      title: Text(label, style: const TextStyle(color: RamadanTheme.textPrimary)),
+      onTap: () {
+        final provider = context.read<AppProvider>();
+        if (isSource) {
+          provider.setSourceLanguage(langCode);
+        } else {
+          provider.setTargetLanguage(langCode);
+        }
+        Navigator.pop(context);
+      },
+    );
+  }
+
+  void _showSettings(AppLocalizations l10n) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: RamadanTheme.backgroundPrimary,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                l10n.settings,
+                style: RamadanTheme.headingStyle.copyWith(fontSize: 20),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(Icons.language, color: RamadanTheme.goldLight),
+                title: Text(
+                  l10n.language,
+                  style: const TextStyle(color: RamadanTheme.textPrimary),
+                ),
+                onTap: () => _showLanguageSettings(l10n),
+              ),
+              ListTile(
+                leading: const Icon(Icons.info, color: RamadanTheme.goldLight),
+                title: Text(
+                  l10n.about,
+                  style: const TextStyle(color: RamadanTheme.textPrimary),
+                ),
+                onTap: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showLanguageSettings(AppLocalizations l10n) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: RamadanTheme.backgroundPrimary,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                l10n.language,
+                style: RamadanTheme.headingStyle.copyWith(fontSize: 20),
+              ),
+              const SizedBox(height: 16),
+              _buildAppLangTile('ru', '🇷🇺', l10n.russian),
+              _buildAppLangTile('en', '🇬🇧', l10n.english),
+              _buildAppLangTile('ar', '🇸🇦', l10n.arabic),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAppLangTile(String langCode, String flag, String label) {
+    final currentLang = Localizations.localeOf(context).languageCode;
+    final isSelected = currentLang == langCode;
+
+    return ListTile(
+      leading: Text(flag, style: const TextStyle(fontSize: 24)),
+      title: Text(label, style: const TextStyle(color: RamadanTheme.textPrimary)),
+      trailing: isSelected
+          ? const Icon(Icons.check, color: RamadanTheme.goldLight)
+          : null,
+      onTap: () {
+        _changeAppLanguage(langCode);
+        Navigator.pop(context);
+        Navigator.pop(context);
+      },
+    );
+  }
+
+  void _changeAppLanguage(String langCode) {
+    final app = context.findAncestorStateOfType<_LisanAppState>();
+    if (app != null) {
+      app.setLocale(Locale(langCode));
+    }
   }
 }

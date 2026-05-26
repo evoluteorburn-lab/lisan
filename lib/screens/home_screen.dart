@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/app_provider.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -7,7 +9,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lisan'),
+        title: const Text('Lisan v1.0.1'),
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
       ),
@@ -21,7 +23,7 @@ class HomeScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF2D5A4A),
+                color: Colors.black,
               ),
               textAlign: TextAlign.center,
             ),
