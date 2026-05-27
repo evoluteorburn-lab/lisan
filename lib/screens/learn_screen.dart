@@ -34,7 +34,7 @@ class _LearnScreenState extends State<LearnScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Режим обучения'),
-        backgroundColor: const Color(0xFF4A7C6F),
+        backgroundColor: Colors.black,
         foregroundColor: Colors.white,
       ),
       body: Padding(
@@ -116,7 +116,7 @@ class _LearnScreenState extends State<LearnScreen> {
         lang,
         style: const TextStyle(fontWeight: FontWeight.bold),
       ),
-      backgroundColor: const Color(0xFF4A7C6F).withOpacity(0.1),
+      backgroundColor: Colors.black.withOpacity(0.1),
     );
   }
 
@@ -288,7 +288,7 @@ class _LearnScreenState extends State<LearnScreen> {
                       icon: Icon(_showExplanation ? Icons.expand_less : Icons.expand_more),
                       label: Text(_showExplanation ? 'Скрыть объяснение' : 'Показать объяснение'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4A7C6F),
+                        backgroundColor: Colors.black,
                         foregroundColor: Colors.white,
                       ),
                     ),

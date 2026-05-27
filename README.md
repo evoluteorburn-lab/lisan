@@ -1,39 +1,17 @@
-# Lisan - AI Translator
+# lisan
 
-## Quick Start
+A new Flutter project.
 
-```bash
-git clone https://github.com/alexanderg/lisan.git
-cd lisan
-flutter pub get
-flutter build apk --release
-```
+## Getting Started
 
-## Features
-- Real-time speech translation (RU ↔ AR)
-- AI-powered learning mode with explanations
-- Voice output using ElevenLabs
-- Save and organize translated phrases
+This project is a starting point for a Flutter application.
 
-## API Keys Required
-- DeepL (translation)
-- DeepSeek (explanations)
-- ElevenLabs (voice)
-- OpenAI (speech recognition)
+A few resources to get you started if this is your first Flutter project:
 
-See `.env.example` for configuration.
+- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
+- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
 
-## Build
-
-### Local
-```bash
-flutter build apk --release
-```
-
-### Docker
-```bash
-./build_docker.sh
-```
-
-## License
-MIT
+For help getting started with Flutter development, view the
+[online documentation](https://docs.flutter.dev/), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.

@@ -33,7 +33,7 @@ class _TranslateScreenState extends State<TranslateScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Быстрый перевод'),
-        backgroundColor: const Color(0xFF2D5A4A),
+        backgroundColor: Colors.black,
         foregroundColor: Colors.white,
       ),
       body: Padding(
@@ -97,7 +97,7 @@ class _TranslateScreenState extends State<TranslateScreen> {
               _buildLanguageChip(provider.sourceLanguage),
               const SizedBox(width: 12),
               IconButton(
-                icon: const Icon(Icons.swap_horiz),
+                icon: const Icon(Icons.swap_horiz, size: 32, size: 32, size: 32),
                 onPressed: provider.swapLanguages,
               ),
               const SizedBox(width: 12),
@@ -115,7 +115,7 @@ class _TranslateScreenState extends State<TranslateScreen> {
         lang,
         style: const TextStyle(fontWeight: FontWeight.bold),
       ),
-      backgroundColor: const Color(0xFF2D5A4A).withOpacity(0.1),
+      backgroundColor: Colors.black.withOpacity(0.1),
     );
   }
 
@@ -333,7 +333,7 @@ class _TranslateScreenState extends State<TranslateScreen> {
         Text(
           label,
           style: TextStyle(
-            fontSize: 14,
+            fontSize: 18,
             color: Colors.grey[600],
           ),
         ),
