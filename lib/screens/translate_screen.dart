@@ -30,7 +30,7 @@ class _TranslateScreenState extends State<TranslateScreen> {
     setState(() => _isTranslating = true);
     
     try {
-      final result = await TranslationService.translate(
+      final result = await _translationService.translate(
         text: _inputController.text,
         sourceLang: _sourceLang,
         targetLang: _targetLang,
